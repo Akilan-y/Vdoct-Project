@@ -42,7 +42,7 @@ const corsOptions = {
   optionsSuccessStatus: 200
 }
 app.use(cors(corsOptions))
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')))
+// Cloudinary handles file serving, no need for local uploads route
 
 // api endpoints
 app.use('/api/user', userRouter)

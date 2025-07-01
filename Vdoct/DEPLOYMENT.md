@@ -8,7 +8,8 @@ This guide will help you deploy the entire Vdoct project (Frontend + Admin Panel
 
 1. **Vercel Account**: Sign up at [vercel.com](https://vercel.com)
 2. **GitHub/GitLab**: Your code should be in a Git repository
-3. **Environment Variables**: Prepare your environment variables
+3. **Cloudinary Account**: Sign up at [cloudinary.com](https://cloudinary.com) for image storage
+4. **Environment Variables**: Prepare your environment variables
 
 ## 🔧 Environment Variables Setup
 
@@ -18,22 +19,35 @@ Create a `.env` file in the root directory or set these in Vercel dashboard:
 
 ```env
 # MongoDB Connection
-MONGODB_URI=your_mongodb_connection_string
+MONGODB_URI=mongodb+srv://Akill:3ZKDb2QZL5vjK6Pq@cluster0.rat0lii.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 
 # JWT Secret
-JWT_SECRET=your_jwt_secret_key
+JWT_SECRET=mysecretkey12345678
 
-# Cloudinary Configuration
+# Cloudinary Configuration (REQUIRED for image uploads)
 CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
 CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 
+# Admin Credentials
+ADMIN_EMAIL=admin@vdoct.com
+ADMIN_PASSWORD=admin123
+
 # Frontend URL (for CORS)
-FRONTEND_URL=https://your-frontend-domain.vercel.app
+FRONTEND_URL=https://your-project.vercel.app
 
 # Admin URL (for CORS)
-ADMIN_URL=https://your-admin-domain.vercel.app
+ADMIN_URL=https://your-project.vercel.app/admin
 ```
+
+## 🖼️ Cloudinary Setup
+
+1. **Sign up at [cloudinary.com](https://cloudinary.com)**
+2. **Get your credentials** from the Dashboard:
+   - Cloud Name
+   - API Key
+   - API Secret
+3. **Replace the placeholder values** in your environment variables
 
 ## 🚀 Deployment Steps
 
@@ -42,7 +56,7 @@ ADMIN_URL=https://your-admin-domain.vercel.app
 1. **Push to Git**:
    ```bash
    git add .
-   git commit -m "Prepare for Vercel deployment"
+   git commit -m "Updated to use Cloudinary for image storage"
    git push origin main
    ```
 
@@ -51,7 +65,7 @@ ADMIN_URL=https://your-admin-domain.vercel.app
    - Click "New Project"
    - Import your Git repository
    - Set the root directory to `/Vdoct`
-   - Configure environment variables
+   - Configure environment variables (especially Cloudinary)
    - Deploy!
 
 3. **URL Structure**:
@@ -118,12 +132,13 @@ const API_BASE_URL = 'https://your-project.vercel.app/api';
 ## ✅ Post-Deployment Checklist
 
 1. ✅ Environment variables configured
-2. ✅ Database connection working
-3. ✅ File uploads working (Cloudinary)
-4. ✅ Authentication working
-5. ✅ CORS configured properly
-6. ✅ All routes accessible
-7. ✅ Logo changes visible
+2. ✅ Cloudinary credentials set
+3. ✅ Database connection working
+4. ✅ File uploads working (Cloudinary)
+5. ✅ Authentication working
+6. ✅ CORS configured properly
+7. ✅ All routes accessible
+8. ✅ Logo changes visible
 
 ## 🐛 Troubleshooting
 
@@ -141,7 +156,13 @@ const API_BASE_URL = 'https://your-project.vercel.app/api';
 
 3. **File Upload Issues**:
    - Verify Cloudinary credentials
-   - Check file size limits
+   - Check file size limits (5MB)
+   - Ensure Cloudinary account is active
+
+4. **Image Display Issues**:
+   - Check if Cloudinary URLs are correct
+   - Verify image format support (jpg, jpeg, png, gif, webp)
+   - Check CORS for image loading
 
 ## 📞 Support
 
@@ -150,6 +171,7 @@ If you encounter issues:
 2. Verify environment variables
 3. Test API endpoints individually
 4. Check browser console for errors
+5. Verify Cloudinary dashboard for uploads
 
 ## 🎉 Success!
 
@@ -159,4 +181,5 @@ Once deployed, your Vdoct platform will be live with:
 - ✅ Admin panel access
 - ✅ Patient portal
 - ✅ Doctor management
-- ✅ Appointment system 
+- ✅ Appointment system
+- ✅ Cloudinary image storage 

@@ -91,7 +91,7 @@ const updateProfile = async (req, res) => {
             gender,
             bloodGroup,
             hasImage: !!req.file,
-            imageFile: req.file?.filename
+            imageFile: req.file?.path
         })
         
         // Check for required fields
@@ -130,8 +130,8 @@ const updateProfile = async (req, res) => {
         
         // If image uploaded, add image field
         if (req.file) {
-            updateData.image = req.file.filename
-            console.log('Image uploaded:', req.file.filename)
+            updateData.image = req.file.path
+            console.log('Image uploaded:', req.file.path)
         }
         
         console.log('Updating user with data:', updateData)

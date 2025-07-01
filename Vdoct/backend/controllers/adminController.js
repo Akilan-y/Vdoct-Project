@@ -74,14 +74,14 @@ const addDoctor = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
         
-        // Handle image upload - use filename for database, not full path
+        // Handle image upload - use Cloudinary URL
         let imagePath = null;
         if (req.file) {
-            imagePath = req.file.filename; // Just the filename, not the full path
-            console.log('Image uploaded:', req.file.filename);
+            imagePath = req.file.path; // Cloudinary URL
+            console.log('Image uploaded:', req.file.path);
         } else {
             // Set a default image if none uploaded
-            imagePath = 'default-doctor.png';
+            imagePath = 'https://res.cloudinary.com/your-cloud-name/image/upload/vdoct-uploads/default-doctor.png';
         }
         
         const doctorData = {
@@ -132,14 +132,14 @@ const addPatient = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
         
-        // Handle image upload - use filename for database, not full path
+        // Handle image upload - use Cloudinary URL
         let imagePath = null;
         if (req.file) {
-            imagePath = req.file.filename; // Just the filename, not the full path
-            console.log('Patient image uploaded:', req.file.filename);
+            imagePath = req.file.path; // Cloudinary URL
+            console.log('Patient image uploaded:', req.file.path);
         } else {
             // Set a default image if none uploaded
-            imagePath = 'default-patient.png';
+            imagePath = 'https://res.cloudinary.com/your-cloud-name/image/upload/vdoct-uploads/default-patient.png';
         }
         
         const patientData = {
