@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import validator from "validator";
 import userModel from "../models/userModel.js";
 
-// API for admin login
+
 const loginAdmin = async (req, res) => {
     try {
         const { email, password } = req.body
@@ -54,6 +54,10 @@ const appointmentCancel = async (req, res) => {
 // API for adding Doctor (with image upload)
 const addDoctor = async (req, res) => {
     try {
+        console.log('--- addDoctor called ---');
+        console.log('Headers:', req.headers);
+        console.log('req.file:', req.file);
+        console.log('req.body:', req.body);
         const { name, email, password, speciality, degree, experience, about, fees, address } = req.body
         if (!name || !email || !password || !speciality || !degree || !experience || !about || !fees || !address) {
             return res.json({ success: false, message: "Missing Details" })
@@ -104,7 +108,7 @@ const addDoctor = async (req, res) => {
         await newDoctor.save()
         res.json({ success: true, message: 'Doctor Added' })
     } catch (error) {
-        console.log(error)
+        console.log('addDoctor error:', error);
         res.json({ success: false, message: error.message })
     }
 }

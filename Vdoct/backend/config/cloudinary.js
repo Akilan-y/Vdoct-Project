@@ -1,13 +1,19 @@
 import { v2 as cloudinary } from 'cloudinary';
 
 const connectCloudinary = async () => {
+    // Debug print for CLOUDINARY_URL
+    console.log('CLOUDINARY_URL:', process.env.CLOUDINARY_URL);
+
+    // Check for missing CLOUDINARY_URL
+    if (!process.env.CLOUDINARY_URL) {
+        console.error('ERROR: CLOUDINARY_URL environment variable is missing. Please check your .env file.');
+        throw new Error('CLOUDINARY_URL environment variable missing');
+    }
 
     cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET
+        cloudinary_url: process.env.CLOUDINARY_URL
     });
-
+    console.log('Cloudinary Connected');
 }
 
 export default connectCloudinary;

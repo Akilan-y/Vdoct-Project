@@ -44,7 +44,7 @@ const Doctors = () => {
         return doctor.image;
       }
       // If it's a filename, construct the full URL
-      return `${backendUrl}/uploads/${doctor.image}`;
+              return doctor.image;
     }
     // Fallback to avatar service
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random&size=256`;

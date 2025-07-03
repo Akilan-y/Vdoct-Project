@@ -4,11 +4,17 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 import { assets } from '../assets/assets'
 
+const loaderStyle = `
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.loader { border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; width: 16px; height: 16px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+`;
+
 const MyProfile = () => {
 
     const [isEdit, setIsEdit] = useState(false)
     const [image, setImage] = useState(false)
     const { token, backendUrl, userData, setUserData, loadUserProfileData } = useContext(AppContext)
+    const [saving, setSaving] = useState(false)
 
     // Function to calculate age from date of birth
     const calculateAge = (dob) => {
@@ -50,33 +56,27 @@ const MyProfile = () => {
 
     // Function to update user profile data using API
     const updateUserProfileData = async () => {
-
+        setSaving(true)
         try {
-            // Validate required fields with better error messages
             if (!userData.name || userData.name.trim() === '') {
                 toast.error("Please enter your name")
-                return
+                setSaving(false); return;
             }
-            
             if (!userData.phone || userData.phone.trim() === '') {
                 toast.error("Please enter your phone number")
-                return
+                setSaving(false); return;
             }
-            
             if (!userData.dob || userData.dob === 'Not Selected') {
                 toast.error("Please select your date of birth")
-                return
+                setSaving(false); return;
             }
-            
             if (!userData.gender || userData.gender === 'Not Selected') {
                 toast.error("Please select your gender")
-                return
+                setSaving(false); return;
             }
-
-            // Validate address
             if (!userData.address || !userData.address.line1 || userData.address.line1.trim() === '') {
                 toast.error("Please provide your address")
-                return
+                setSaving(false); return;
             }
 
             // Ensure address has proper structure
@@ -128,15 +128,36 @@ const MyProfile = () => {
         } catch (error) {
             console.log(error)
             toast.error(error.response?.data?.message || error.message)
+        } finally {
+            setSaving(false)
         }
-
     }
 
     // Calculate age for display
     const ageData = calculateAge(userData?.dob)
 
     // Check if userData is properly loaded
-    if (!userData || !userData.name || !userData.email) {
+    if (userData === false) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-text">Loading profile data...</p>
+                </div>
+            </div>
+        )
+    }
+    if (userData === null) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="text-2xl text-red-500 font-semibold mb-4">Failed to load profile.</div>
+                    <p className="text-text">Please log in again or check your connection.</p>
+                </div>
+            </div>
+        )
+    }
+    if (!userData.name || !userData.email) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
                 <div className="text-center">
@@ -186,7 +207,7 @@ const MyProfile = () => {
                                         <div className='relative group'>
                                             <img 
                                                 className='w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg group-hover:opacity-75 transition-opacity' 
-                                                src={image ? URL.createObjectURL(image) : (userData.image ? (userData.image.startsWith('http') ? userData.image : backendUrl + '/uploads/' + userData.image) : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.name) + '&background=random&size=128')} 
+                                                src={image ? URL.createObjectURL(image) : (userData.image ? userData.image : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.name) + '&background=random&size=128')} 
                                                 alt={userData.name} 
                                             />
                                             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -202,7 +223,7 @@ const MyProfile = () => {
                                 ) : (
                                     <img 
                                         className='w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg' 
-                                        src={userData.image ? (userData.image.startsWith('http') ? userData.image : backendUrl + '/uploads/' + userData.image) : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.name) + '&background=random&size=128'} 
+                                        src={userData.image ? userData.image : 'https://ui-avatars.com/api/?name=' + encodeURIComponent(userData.name) + '&background=random&size=128'} 
                                         alt={userData.name} 
                                     />
                                 )}
@@ -228,9 +249,10 @@ const MyProfile = () => {
                                         <>
                                             <button 
                                                 onClick={updateUserProfileData} 
+                                                disabled={saving} 
                                                 className='bg-primary text-white px-6 py-2 rounded-full hover:bg-accent transition-all duration-200 font-semibold shadow-lg hover:shadow-xl'
                                             >
-                                                Save Changes
+                                                {saving ? <span className="loader"></span> : 'Save Changes'}
                                             </button>
                                             <button 
                                                 onClick={() => {
@@ -473,6 +495,7 @@ const MyProfile = () => {
                     </div>
                 </div>
             </div>
+            <style>{loaderStyle}</style>
         </div>
     ) : null
 }

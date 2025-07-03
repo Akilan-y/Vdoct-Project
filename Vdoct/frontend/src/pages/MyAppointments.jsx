@@ -130,7 +130,7 @@ const MyAppointments = () => {
     const getDoctorImage = (docData, name) => {
         if (docData && docData.image) {
             if (docData.image.startsWith('http')) return docData.image;
-            return `${backendUrl}/uploads/${docData.image}`;
+            return docData.image;
         }
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Doctor')}&background=random&size=256`;
     };

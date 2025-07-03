@@ -48,10 +48,12 @@ const AppContextProvider = (props) => {
             if (data.success) {
                 setUserData(data.userData)
             } else {
+                setUserData(null)
                 toast.error(data.message)
             }
 
         } catch (error) {
+            setUserData(null)
             console.log(error)
             toast.error(error.message)
         }

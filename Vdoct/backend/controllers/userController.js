@@ -79,6 +79,10 @@ const getProfile = async (req, res) => {
 // API to update user profile (with image upload)
 const updateProfile = async (req, res) => {
     try {
+        console.log('--- updateProfile called ---');
+        console.log('Headers:', req.headers);
+        console.log('req.file:', req.file);
+        console.log('req.body:', req.body);
         const { name, phone, address, dob, gender, bloodGroup } = req.body
         const userId = req.user.id
         
@@ -139,7 +143,7 @@ const updateProfile = async (req, res) => {
         await userModel.findByIdAndUpdate(userId, updateData)
         res.json({ success: true, message: 'Profile Updated' })
     } catch (error) {
-        console.log('Profile update error:', error)
+        console.log('Profile update error:', error);
         res.json({ success: false, message: error.message })
     }
 }

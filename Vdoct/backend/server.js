@@ -6,6 +6,11 @@ import connectDB from "./config/mongodb.js"
 import userRouter from "./routes/userRoute.js"
 import doctorRouter from "./routes/doctorRoute.js"
 import adminRouter from "./routes/adminRoute.js"
+import fs from 'fs'
+
+console.log('DEBUG: CWD =', process.cwd());
+console.log('DEBUG: .env exists =', fs.existsSync('.env'));
+console.log('DEBUG: CLOUDINARY_URL =', process.env.CLOUDINARY_URL);
 
 // Set fallback environment variables
 if (!process.env.JWT_SECRET) {
