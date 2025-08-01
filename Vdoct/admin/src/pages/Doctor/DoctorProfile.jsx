@@ -22,10 +22,15 @@ const DoctorProfile = () => {
                 available: profileData.available,
                 licenseNumber: profileData.licenseNumber,
                 registrationNumber: profileData.registrationNumber,
-                notes: profileData.notes
+                notes: profileData.notes,
+                upiId: profileData.upiId
             }
 
+            console.log('Updating doctor profile with data:', updateData);
+
             const { data } = await axios.post(backendUrl + '/api/doctor/update-profile', updateData, { headers: { dToken: doctorToken } })
+
+            console.log('Profile update response:', data);
 
             if (data.success) {
                 toast.success(data.message)
@@ -342,6 +347,17 @@ const DoctorProfile = () => {
                                                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                                 />
                                             </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-3">UPI ID</label>
+                                                <input
+                                                    type="text"
+                                                    value={profileData.upiId || ''}
+                                                    onChange={(e) => setProfileData(prev => ({ ...prev, upiId: e.target.value }))}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                                    placeholder="doctor@upi"
+                                                />
+                                                <p className="text-xs text-gray-500 mt-1">Leave empty to use default UPI ID</p>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-3">Address</label>
@@ -409,7 +425,11 @@ const DoctorProfile = () => {
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-gray-500 mb-2">Experience</p>
-                                            <p className="text-lg text-gray-900 font-medium">{profileData.experience} years</p>
+                                            <p className="text-lg text-gray-900 font-medium">{
+                                                (typeof profileData.experience === 'string' && profileData.experience.toLowerCase().includes('year'))
+                                                    ? profileData.experience
+                                                    : `${profileData.experience} years`
+                                            }</p>
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-gray-500 mb-2">Consultation Fee</p>
@@ -427,6 +447,12 @@ const DoctorProfile = () => {
                                                 <p className="text-lg text-gray-900 font-medium">{profileData.registrationNumber}</p>
                                             </div>
                                         )}
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-500 mb-2">UPI ID</p>
+                                            <p className="text-lg text-gray-900 font-medium">
+                                                {profileData.upiId ? profileData.upiId : 'uthayakilan@okaxis (Default)'}
+                                            </p>
+                                        </div>
                                         <div className="md:col-span-2">
                                             <p className="text-sm font-semibold text-gray-500 mb-2">Address</p>
                                             <p className="text-lg text-gray-900 font-medium">{profileData.address?.line1}, {profileData.address?.line2}</p>
@@ -471,12 +497,39 @@ const DoctorProfile = () => {
                                             dashData.appointments.filter(a => a.isCompleted).length : 0}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Success Rate</span>
-                                    <span className="font-bold text-purple-600">
-                                        {Array.isArray(dashData?.appointments) && dashData.appointments.length > 0 ? 
-                                            Math.round((dashData.appointments.filter(a => a.isCompleted).length / dashData.appointments.length) * 100) : 0}%
-                                    </span>
+                            </div>
+                        </div>
+
+                        {/* UPI ID Display */}
+                        <div className="bg-white rounded-2xl shadow-lg border border-gray-100">
+                            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-2xl">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                                    <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                    Payment UPI ID
+                                </h3>
+                            </div>
+                            <div className="p-6">
+                                <div className="text-center">
+                                    <div className="bg-gray-50 rounded-xl p-4 mb-3">
+                                        <p className="text-sm text-gray-600 mb-1">Current UPI ID</p>
+                                        <p className="text-lg font-mono font-bold text-purple-600 break-all">
+                                            {profileData.upiId ? profileData.upiId : 'uthayakilan@okaxis (Default)'}
+                                        </p>
+                                    </div>
+                                    <p className="text-xs text-gray-500">
+                                        {profileData.upiId 
+                                            ? 'Patients will pay to this UPI ID' 
+                                            : 'Using system default UPI ID'
+                                        }
+                                    </p>
+                                    <button
+                                        onClick={() => setIsEdit(true)}
+                                        className="mt-3 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                    >
+                                        {profileData.upiId ? 'Change UPI ID' : 'Set UPI ID'}
+                                    </button>
                                 </div>
                             </div>
                         </div>

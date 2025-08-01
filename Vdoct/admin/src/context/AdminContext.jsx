@@ -101,6 +101,33 @@ const AdminContextProvider = (props) => {
         }
     }, [backendUrl, adminToken, getDoctorsData])
 
+    // Function to change doctor verification status using API (memoized)
+    const changeVerificationStatus = useCallback(async (doctorId, status) => {
+        try {
+            console.log('=== FRONTEND: Sending verification status change ===');
+            console.log('doctorId:', doctorId, 'status:', status);
+            
+            const { data } = await axios.post(backendUrl + '/api/admin/verify-doctor', { 
+                doctorId, 
+                status 
+            }, { headers: { atoken: adminToken } })
+            
+            console.log('=== FRONTEND: Received response ===');
+            console.log('Response:', data);
+            
+            if (data.success) {
+                toast.success(data.message)
+                getDoctorsData()
+            } else {
+                toast.error(data.message)
+            }
+        } catch (error) {
+            console.log('=== FRONTEND: Error in changeVerificationStatus ===');
+            console.log('Error:', error)
+            toast.error(error.message)
+        }
+    }, [backendUrl, adminToken, getDoctorsData])
+
     // Function to refresh all data after adding a doctor (memoized)
     const refreshAllData = useCallback(async () => {
         await Promise.all([
@@ -127,6 +154,7 @@ const AdminContextProvider = (props) => {
         dashData, getDashData,
         cancelAppointment,
         changeAvailability,
+        changeVerificationStatus,
         refreshAllData,
         backendUrl,
         adminToken, setAdminToken

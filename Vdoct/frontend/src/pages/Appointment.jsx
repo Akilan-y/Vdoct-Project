@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 import RelatedDoctors from '../components/RelatedDoctors'
+import UPIPayment from '../components/UPIPayment'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 
@@ -19,6 +20,8 @@ const Appointment = () => {
     const [bookingError, setBookingError] = useState('')
     const [showConfirm, setShowConfirm] = useState(false)
     const [pendingBooking, setPendingBooking] = useState(false)
+    const [showPayment, setShowPayment] = useState(false)
+    const [bookedAppointment, setBookedAppointment] = useState(null)
 
     const navigate = useNavigate()
 
@@ -113,7 +116,21 @@ const Appointment = () => {
             if (data.success) {
                 toast.success(data.message)
                 getDoctosData()
-                navigate('/my-appointments')
+                
+                // Set booked appointment data for payment
+                setBookedAppointment({
+                    _id: data.appointmentId || 'temp-id',
+                    fees: docInfo.fees,
+                    patientName: data.patientName || 'Patient',
+                    doctorName: docInfo.name,
+                    doctorId: docInfo._id,
+                    slotDate,
+                    slotTime
+                })
+                
+                // Show payment instead of navigating
+                setShowPayment(true)
+                setShowConfirm(false)
             } else {
                 toast.error(data.message)
             }
@@ -122,8 +139,20 @@ const Appointment = () => {
             toast.error(error.message)
         } finally {
             setPendingBooking(false)
-            setShowConfirm(false)
         }
+    }
+
+    const handlePaymentComplete = () => {
+        toast.success('Payment completed! Your appointment is confirmed.')
+        setShowPayment(false)
+        setBookedAppointment(null)
+        navigate('/my-appointments')
+    }
+
+    const handlePaymentCancel = () => {
+        setShowPayment(false)
+        setBookedAppointment(null)
+        toast.info('Payment cancelled. You can try again later.')
     }
 
     // Clear error when slot is selected
@@ -268,6 +297,15 @@ const Appointment = () => {
 
             {/* Listing Releated Doctors */}
             <RelatedDoctors speciality={docInfo.speciality} docId={docId} />
+
+            {/* Payment Modal */}
+            {showPayment && bookedAppointment && (
+                <UPIPayment
+                    appointmentData={bookedAppointment}
+                    onPaymentComplete={handlePaymentComplete}
+                    onCancel={handlePaymentCancel}
+                />
+            )}
         </div>
     ) : null
 }

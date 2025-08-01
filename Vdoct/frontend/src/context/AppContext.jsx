@@ -15,6 +15,25 @@ const AppContextProvider = (props) => {
     const [token, setToken] = useState(localStorage.getItem('token') ? localStorage.getItem('token') : '')
     const [userData, setUserData] = useState(false)
 
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Function to format the date eg. ( 20_01_2000 => 20 Jan 2000 )
+    const slotDateFormat = (slotDate) => {
+        if (!slotDate || typeof slotDate !== 'string') {
+            return 'Invalid Date';
+        }
+        try {
+            const dateArray = slotDate.split('_')
+            if (dateArray.length !== 3) {
+                return 'Invalid Date Format';
+            }
+            return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
+        } catch (error) {
+            console.error('Error formatting date:', error);
+            return 'Invalid Date';
+        }
+    }
+
     // Getting Doctors using API
     const getDoctosData = async () => {
         try {
@@ -76,7 +95,8 @@ const AppContextProvider = (props) => {
         backendUrl,
         token, setToken,
         userData, setUserData, loadUserProfileData,
-        refreshDoctors
+        refreshDoctors,
+        slotDateFormat
     }
 
     return (

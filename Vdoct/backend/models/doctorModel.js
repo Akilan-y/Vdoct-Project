@@ -31,7 +31,8 @@ const doctorSchema = new mongoose.Schema({
     verifiedBy: { type: String, default: null },
     verifiedAt: { type: Number, default: null },
     licenseNumber: { type: String, default: '' },
-    registrationNumber: { type: String, default: '' }
+    registrationNumber: { type: String, default: '' },
+    upiId: { type: String, default: '' }
 }, { minimize: false })
 
 const doctorModel = mongoose.models.doctor || mongoose.model("doctor", doctorSchema);

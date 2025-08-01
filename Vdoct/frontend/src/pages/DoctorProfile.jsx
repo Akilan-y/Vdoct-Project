@@ -89,6 +89,11 @@ const DoctorProfile = () => {
           <div className="mb-2 text-text">
             <b>Fee:</b> ${doctor.fees}
           </div>
+          {doctor.upiId && (
+            <div className="mb-2 text-text">
+              <b>Payment UPI ID:</b> <span className="font-mono text-accent">{doctor.upiId}</span>
+            </div>
+          )}
           {doctor.licenseNumber && (
             <div className="mb-2 text-text">
               <b>License:</b> {doctor.licenseNumber}

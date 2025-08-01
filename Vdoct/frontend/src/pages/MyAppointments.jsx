@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
-import { assets } from '../assets/assets'
+import UPIPayment from '../components/UPIPayment'
+import GoogleMeetButton from '../components/GoogleMeetButton'
 
 const MyAppointments = () => {
 
@@ -11,7 +12,8 @@ const MyAppointments = () => {
     const navigate = useNavigate()
 
     const [appointments, setAppointments] = useState([])
-    const [payment, setPayment] = useState('')
+    const [showUPIPayment, setShowUPIPayment] = useState(false)
+    const [selectedAppointment, setSelectedAppointment] = useState(null)
     const [cancelling, setCancelling] = useState({})
     const [cancelled, setCancelled] = useState({})
     const [confirmCancelId, setConfirmCancelId] = useState(null)
@@ -30,6 +32,16 @@ const MyAppointments = () => {
     const getUserAppointments = async () => {
         try {
             const { data } = await axios.get(backendUrl + '/api/user/appointments', { headers: { token } })
+            console.log('=== FETCHED APPOINTMENTS ===');
+            console.log('Appointments data:', data.appointments);
+            data.appointments.forEach((apt, index) => {
+                console.log(`Appointment ${index}:`, {
+                    id: apt._id,
+                    cancelled: apt.cancelled,
+                    payment: apt.payment,
+                    isCompleted: apt.isCompleted
+                });
+            });
             setAppointments(data.appointments.reverse())
         } catch (error) {
             console.log(error)
@@ -58,67 +70,65 @@ const MyAppointments = () => {
         }
     }
 
-    const initPay = (order) => {
-        const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-            amount: order.amount,
-            currency: order.currency,
-            name: 'Appointment Payment',
-            description: "Appointment Payment",
-            order_id: order.id,
-            receipt: order.receipt,
-            handler: async (response) => {
-                try {
-                    const { data } = await axios.post(backendUrl + "/api/user/verifyRazorpay", response, { headers: { token } });
-                    if (data.success) {
-                        navigate('/my-appointments')
-                        getUserAppointments()
-                    }
-                } catch (error) {
-                    console.log(error)
-                    toast.error(error.message)
-                }
-            }
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.open();
+    // Function to initiate UPI payment
+    const initiateUPIPayment = (appointment) => {
+        console.log('Initiating UPI payment for appointment:', appointment);
+        setSelectedAppointment({
+            _id: appointment._id,
+            fees: appointment.amount || appointment.docData?.fees,
+            patientName: appointment.userData?.name || 'Patient',
+            doctorName: appointment.docData?.name || 'Doctor',
+            doctorId: appointment.docId,
+            slotDate: appointment.slotDate,
+            slotTime: appointment.slotTime
+        });
+        setShowUPIPayment(true);
+        console.log('UPI payment modal should now be visible');
+        
+        // Scroll to top to ensure modal is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // Function to make payment using razorpay
-    const appointmentRazorpay = async (appointmentId) => {
-        try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-razorpay', { appointmentId }, { headers: { token } })
-            if (data.success) {
-                initPay(data.order)
-            }else{
-                toast.error(data.message)
-            }
-        } catch (error) {
-            console.log(error)
-            toast.error(error.message)
-        }
-    }
+    // Handle payment completion
+    const handlePaymentComplete = () => {
+        console.log('=== PAYMENT COMPLETED ===');
+        console.log('Refreshing appointments...');
+        toast.success('Payment completed! Your appointment is confirmed.');
+        setShowUPIPayment(false);
+        setSelectedAppointment(null);
+        getUserAppointments();
+    };
 
-    // Function to make payment using stripe
-    const appointmentStripe = async (appointmentId) => {
-        try {
-            const { data } = await axios.post(backendUrl + '/api/user/payment-stripe', { appointmentId }, { headers: { token } })
-            if (data.success) {
-                const { session_url } = data
-                window.location.replace(session_url)
-            }else{
-                toast.error(data.message)
-            }
-        } catch (error) {
-            console.log(error)
-            toast.error(error.message)
-        }
-    }
+    const handlePaymentCancel = () => {
+        setShowUPIPayment(false);
+        setSelectedAppointment(null);
+    };
 
-    // Demo: Mark appointment as agreed
     const agreeAppointment = (index) => {
-        setAppointments(prev => prev.map((item, i) => i === index ? { ...item, agreed: true } : item));
+        const updatedAppointments = [...appointments];
+        updatedAppointments[index].agreed = true;
+        setAppointments(updatedAppointments);
     }
+
+    const getDoctorImage = (docData, name) => {
+        if (docData.image) {
+            return docData.image.startsWith('http') ? docData.image : `${backendUrl}/uploads/${docData.image}`;
+        }
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=256`;
+    };
+
+    const getStatusBadge = (item) => {
+        if (item.cancelled) {
+            return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Cancelled</span>;
+        }
+        if (item.isCompleted) {
+            return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Completed</span>;
+        }
+        if (item.payment) {
+            return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Paid</span>;
+        }
+        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>;
+    };
 
     useEffect(() => {
         if (token) {
@@ -126,29 +136,17 @@ const MyAppointments = () => {
         }
     }, [token])
 
-    // Helper to get doctor image
-    const getDoctorImage = (docData, name) => {
-        if (docData && docData.image) {
-            if (docData.image.startsWith('http')) return docData.image;
-            return docData.image;
-        }
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'Doctor')}&background=random&size=256`;
-    };
-
-    // Helper to get status badge
-    const getStatusBadge = (item) => {
-        if (item.cancelled) return <span className="inline-block px-3 py-1 rounded-full bg-red-100 text-red-600 text-xs font-semibold">Cancelled</span>;
-        if (item.isCompleted) return <span className="inline-block px-3 py-1 rounded-full bg-green-100 text-green-600 text-xs font-semibold">Completed</span>;
-        if (item.payment) return <span className="inline-block px-3 py-1 rounded-full bg-blue-100 text-blue-600 text-xs font-semibold">Paid</span>;
-        return <span className="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">Pending</span>;
-    };
-
     return (
-        <div className="max-w-3xl mx-auto px-2 sm:px-0">
-            <h2 className="pb-3 mt-12 text-2xl font-bold text-primary border-b mb-8">My Appointments</h2>
-            {appointments.length === 0 && (
+        <div className="min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent/5 py-8 px-4">
+            <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-primary mb-2">My Appointments</h1>
+                    <p className="text-gray-600">Manage your scheduled appointments</p>
+                </div>
+            
+                {appointments.length === 0 ? (
                 <div className="text-center text-gray-500 py-10">No appointments found.</div>
-            )}
+                ) : (
             <div className="flex flex-col gap-8">
                 {appointments.map((item, index) => (
                     item.docData ? (
@@ -185,9 +183,19 @@ const MyAppointments = () => {
                             </div>
                             {/* Actions */}
                             <div className="flex flex-col gap-2 min-w-[140px] w-full sm:w-auto">
-                                {!item.cancelled && !item.payment && !item.isCompleted && payment !== item._id && <button onClick={() => setPayment(item._id)} className="text-[#696969] py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300">Pay Online</button>}
-                                {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentStripe(item._id)} className="text-[#696969] py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center"><img className="max-w-20 max-h-5" src={assets.stripe_logo} alt="" /></button>}
-                                {!item.cancelled && !item.payment && !item.isCompleted && payment === item._id && <button onClick={() => appointmentRazorpay(item._id)} className="text-[#696969] py-2 border rounded hover:bg-gray-100 hover:text-white transition-all duration-300 flex items-center justify-center"><img className="max-w-20 max-h-5" src={assets.razorpay_logo} alt="" /></button>}
+                                        {/* Google Meet Button */}
+                                        {!item.cancelled && item.payment && !item.isCompleted && (
+                                            <GoogleMeetButton 
+                                                appointmentId={item._id} 
+                                                appointment={item}
+                                                isDoctor={false}
+                                                onAppointmentUpdate={getUserAppointments}
+                                            />
+                                        )}
+                                        
+                                {!item.cancelled && !item.payment && !item.isCompleted && (
+                                    <button onClick={() => initiateUPIPayment(item)} className="text-[#696969] py-2 border rounded hover:bg-primary hover:text-white transition-all duration-300">Pay Online</button>
+                                )}
                                 {!item.cancelled && item.payment && !item.isCompleted && <button className="py-2 border rounded text-[#696969] bg-[#EAEFFF]">Paid</button>}
                                 {item.isCompleted && <button className="py-2 border border-green-500 rounded text-green-500">Completed</button>}
                                 {!item.cancelled && !item.isCompleted && (
@@ -232,6 +240,17 @@ const MyAppointments = () => {
                         </div>
                     ) : null
                 ))}
+            </div>
+                )}
+
+            {/* UPI Payment Modal */}
+            {showUPIPayment && selectedAppointment && (
+                <UPIPayment
+                    appointmentData={selectedAppointment}
+                    onPaymentComplete={handlePaymentComplete}
+                    onCancel={handlePaymentCancel}
+                />
+            )}
             </div>
         </div>
     )

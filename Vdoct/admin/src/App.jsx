@@ -25,11 +25,23 @@ const App = () => {
   const { adminToken } = useContext(AdminContext)
 
   return doctorToken || adminToken ? (
-    <div className='bg-[#F8F9FD]'>
-      <ToastContainer />
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50'>
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Navbar />
       <div className='flex items-start'>
         <Sidebar />
+        <main className='flex-1 p-6'>
         <Routes>
           <Route path='/' element={<></>} />
           <Route path='/admin-dashboard' element={<Dashboard />} />
@@ -44,13 +56,25 @@ const App = () => {
           <Route path='/add-patient' element={<AddPatient />} />
           <Route path='/doctor-schedule' element={<DoctorSchedule />} />
         </Routes>
+        </main>
       </div>
     </div>
   ) : (
-    <>
-      <ToastContainer />
+    <div className='min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50'>
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Login />
-    </>
+    </div>
   )
 }
 

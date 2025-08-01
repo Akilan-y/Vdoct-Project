@@ -78,14 +78,15 @@ const addDoctor = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
         
-        // Handle image upload - use Cloudinary URL
+        // Handle image upload - use Cloudinary URL or local path
         let imagePath = null;
         if (req.file) {
-            imagePath = req.file.path; // Cloudinary URL
+            imagePath = req.file.path; // Cloudinary URL or local path
             console.log('Image uploaded:', req.file.path);
         } else {
             // Set a default image if none uploaded
-            imagePath = 'https://res.cloudinary.com/your-cloud-name/image/upload/vdoct-uploads/default-doctor.png';
+            imagePath = 'https://ui-avatars.com/api/?name=Doctor&background=random&size=200';
+            console.log('Using default image');
         }
         
         const doctorData = {
@@ -102,14 +103,21 @@ const addDoctor = async (req, res) => {
             date: Date.now(),
             // Explicitly set verification status
             isVerified: false,
-            verificationStatus: 'pending'
+            verificationStatus: 'pending',
+            // Add UPI ID if provided
+            ...(req.body.upiId && { upiId: req.body.upiId }),
+            // Add registration number if provided
+            ...(req.body.registrationNumber && { registrationNumber: req.body.registrationNumber })
         }
         const newDoctor = new doctorModel(doctorData)
         await newDoctor.save()
         res.json({ success: true, message: 'Doctor Added' })
     } catch (error) {
         console.log('addDoctor error:', error);
-        res.json({ success: false, message: error.message })
+        if (error && error.stack) {
+            console.log('addDoctor error stack:', error.stack);
+        }
+        res.status(500).json({ success: false, message: error.message, stack: error.stack });
     }
 }
 
@@ -169,8 +177,14 @@ const addPatient = async (req, res) => {
 // API to get all doctors list for admin panel
 const allDoctors = async (req, res) => {
     try {
-
+        console.log('=== FETCHING ALL DOCTORS ===');
         const doctors = await doctorModel.find({}).select('-password')
+        
+        console.log(`Found ${doctors.length} doctors:`);
+        doctors.forEach((doctor, index) => {
+            console.log(`Doctor ${index + 1}: ${doctor.name} - verificationStatus: ${doctor.verificationStatus || 'NOT SET'}, isVerified: ${doctor.isVerified}`);
+        });
+        
         res.json({ success: true, doctors })
 
     } catch (error) {
@@ -273,6 +287,8 @@ const verifyDoctor = async (req, res) => {
         // Don't rely on req.user.id for now, just use 'admin' as the verifier
         const adminId = 'admin';
 
+        console.log('=== VERIFY DOCTOR REQUEST ===');
+        console.log('Request body:', req.body);
         console.log('Verification request:', {
             doctorId,
             status,
@@ -282,11 +298,18 @@ const verifyDoctor = async (req, res) => {
         });
 
         if (!doctorId || !status) {
+            console.log('Missing required fields - doctorId:', doctorId, 'status:', status);
             return res.json({ success: false, message: "Missing required fields" });
         }
 
-        // Allow approved, rejected, and pending status
-        if (!['approved', 'rejected', 'pending'].includes(status)) {
+        // Allow approved, rejected, pending, and verified status
+        console.log('Received status:', status);
+        console.log('Status type:', typeof status);
+        console.log('Allowed statuses:', ['approved', 'rejected', 'pending', 'verified']);
+        console.log('Status included in allowed list:', ['approved', 'rejected', 'pending', 'verified'].includes(status));
+        
+        if (!['approved', 'rejected', 'pending', 'verified'].includes(status)) {
+            console.log('Invalid status received:', status);
             return res.json({ success: false, message: "Invalid status" });
         }
 
@@ -311,10 +334,11 @@ const verifyDoctor = async (req, res) => {
         const updatedDoctor = await doctorModel.findByIdAndUpdate(doctorId, updateData, { new: true });
 
         if (!updatedDoctor) {
+            console.log('Doctor not found with ID:', doctorId);
             return res.json({ success: false, message: "Doctor not found" });
         }
 
-        console.log('Doctor updated successfully:', updatedDoctor.name);
+        console.log('Doctor updated successfully:', updatedDoctor.name, 'New status:', updatedDoctor.verificationStatus);
 
         // Customize success message based on status
         let successMessage = '';
@@ -324,8 +348,11 @@ const verifyDoctor = async (req, res) => {
             successMessage = 'Doctor rejected successfully';
         } else if (status === 'pending') {
             successMessage = 'Doctor reverted to pending successfully';
+        } else if (status === 'verified') {
+            successMessage = 'Doctor marked as verified successfully';
         }
 
+        console.log('Sending success response:', successMessage);
         res.json({ 
             success: true, 
             message: successMessage

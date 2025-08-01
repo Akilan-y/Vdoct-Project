@@ -18,6 +18,8 @@ const AddDoctor = () => {
     const [degree, setDegree] = useState('')
     const [address1, setAddress1] = useState('')
     const [address2, setAddress2] = useState('')
+    const [registrationNumber, setRegistrationNumber] = useState('')
+    const [upiId, setUpiId] = useState('')
 
     const { backendUrl } = useContext(AppContext)
     const { adminToken, refreshAllData } = useContext(AdminContext)
@@ -43,13 +45,19 @@ const AddDoctor = () => {
             formData.append('speciality', speciality)
             formData.append('degree', degree)
             formData.append('address', JSON.stringify({ line1: address1, line2: address2 }))
+            formData.append('registrationNumber', registrationNumber)
+            formData.append('upiId', upiId)
 
             // console log formdata            
             formData.forEach((value, key) => {
                 console.log(`${key}: ${value}`);
             });
 
-            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { headers: { atoken: adminToken } })
+            const { data } = await axios.post(backendUrl + '/api/admin/add-doctor', formData, { 
+                headers: { 
+                    atoken: adminToken
+                } 
+            })
             if (data.success) {
                 toast.success(data.message)
                 // Refresh all data after adding doctor
@@ -64,6 +72,8 @@ const AddDoctor = () => {
                 setDegree('')
                 setAbout('')
                 setFees('')
+                setRegistrationNumber('')
+                setUpiId('')
             } else {
                 toast.error(data.message)
             }
@@ -74,7 +84,13 @@ const AddDoctor = () => {
             } else {
                 toast.error(error.message)
             }
-            console.log(error)
+            // Enhanced error logging for debugging
+            console.log('AXIOS ERROR:', error);
+            if (error.response) {
+                console.log('AXIOS ERROR RESPONSE DATA:', error.response.data);
+                console.log('AXIOS ERROR RESPONSE STATUS:', error.response.status);
+                console.log('AXIOS ERROR RESPONSE HEADERS:', error.response.headers);
+            }
         }
 
     }
@@ -131,6 +147,17 @@ const AddDoctor = () => {
                         <div className='flex-1 flex flex-col gap-1'>
                             <p>Fees</p>
                             <input onChange={e => setFees(e.target.value)} value={fees} className='border rounded px-3 py-2' type="number" placeholder='Doctor fees' required />
+                        </div>
+
+                        <div className='flex-1 flex flex-col gap-1'>
+                            <p>Registration Number</p>
+                            <input onChange={e => setRegistrationNumber(e.target.value)} value={registrationNumber} className='border rounded px-3 py-2' type="text" placeholder='Registration Number' />
+                        </div>
+
+                        <div className='flex-1 flex flex-col gap-1'>
+                            <p>UPI ID (Optional)</p>
+                            <input onChange={e => setUpiId(e.target.value)} value={upiId} className='border rounded px-3 py-2' type="text" placeholder='doctor@upi' />
+                            <p className='text-xs text-gray-500'>Leave empty to use default UPI ID</p>
                         </div>
 
                     </div>

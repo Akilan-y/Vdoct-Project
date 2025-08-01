@@ -1,52 +1,63 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { AppContext } from '../context/AppContext'
-import { useNavigate, useParams } from 'react-router-dom'
-import { specialityData } from '../assets/assets'
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { AppContext } from '../context/AppContext';
+import { useNavigate, useParams } from 'react-router-dom';
+import { specialityData } from '../assets/assets';
+import menu_icon from '../assets/menu_icon.svg';
 
 const Doctors = () => {
-  const { speciality } = useParams()
-  const [filterDoc, setFilterDoc] = useState([])
-  const [search, setSearch] = useState('')
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [animateCards, setAnimateCards] = useState(false)
+  const { speciality } = useParams();
+  const [filterDoc, setFilterDoc] = useState([]);
+  const [search, setSearch] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [animateCards, setAnimateCards] = useState(false);
+  const [showSpecialties, setShowSpecialties] = useState(true); // visible by default
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const { doctors, refreshDoctors, backendUrl } = useContext(AppContext)
+  const { doctors, refreshDoctors } = useContext(AppContext);
 
   useEffect(() => {
-    let docs = doctors
+    let docs = doctors;
     if (speciality) {
-      docs = docs.filter(doc => doc.speciality === speciality)
+      docs = docs.filter(doc => doc.speciality === speciality);
     }
     if (search.trim()) {
       docs = docs.filter(doc =>
         doc.name.toLowerCase().includes(search.toLowerCase()) ||
         doc.speciality.toLowerCase().includes(search.toLowerCase())
-      )
+      );
     }
-    setFilterDoc(docs)
-  }, [doctors, speciality, search])
+    setFilterDoc(docs);
+  }, [doctors, speciality, search]);
+
+  // Hide specialties list on mobile when burger is tapped
+  useEffect(() => {
+    function handleResize() {
+      if (window.innerWidth >= 768) {
+        setShowSpecialties(true); // always show on desktop
+      }
+    }
+    window.addEventListener('resize', handleResize);
+    handleResize();
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleRefresh = async () => {
-    setIsRefreshing(true)
-    setAnimateCards(true)
-    await refreshDoctors()
+    setIsRefreshing(true);
+    setAnimateCards(true);
+    await refreshDoctors();
     setTimeout(() => {
-      setIsRefreshing(false)
-      setAnimateCards(false)
-    }, 700) // keep spin and animation for a short time for effect
-  }
+      setIsRefreshing(false);
+      setAnimateCards(false);
+    }, 700);
+  };
 
-  // Construct image URL properly
   const getImageUrl = (doctor) => {
     if (doctor.image) {
-      // If it's a full URL, use it as is
       if (doctor.image.startsWith('http')) {
         return doctor.image;
       }
-      // If it's a filename, construct the full URL
               return doctor.image;
     }
-    // Fallback to avatar service
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=random&size=256`;
   };
 
@@ -67,31 +78,22 @@ const Doctors = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      {/* Back Button at far left of main body, above sticky header */}
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-primary/5 via-white to-accent/5">
+      {/* Back & Home & Refresh Buttons */}
       <div className="max-w-6xl mx-auto w-full px-4 pt-8 flex items-center gap-5">
-        <button onClick={() => navigate(-1)} className="bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow hover:bg-accent hover:text-white transition mb-4">
+        <button onClick={() => navigate(-1)} className="bg-white text-primary rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-accent hover:text-white transition mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
           </svg>
         </button>
-        <button onClick={() => navigate('/')} className="bg-white text-primary rounded-full w-9 h-9 flex items-center justify-center shadow hover:bg-accent hover:text-white transition mb-4 ml-5">
+        <button onClick={() => navigate('/')} className="bg-white text-primary rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-accent hover:text-white transition mb-4 ml-2">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l9-9 9 9M4.5 10.5V19a1.5 1.5 0 001.5 1.5h3.75m6 0H18a1.5 1.5 0 001.5-1.5V10.5M9.75 21V15h4.5v6" />
           </svg>
         </button>
-      </div>
-      {/* Sticky Doctors Header */}
-      <div className="sticky top-0 z-30 px-4 py-3 mb-6 rounded-xl backdrop-blur bg-primary/60 shadow-lg shadow-primary/10 border-b border-primary/20 max-w-xl mx-auto mt-[-1.5rem] flex items-center justify-center relative">
-        <h1 className="text-xl sm:text-2xl font-bold text-surface tracking-tight mx-auto">Find Your Doctor</h1>
-      </div>
-      <div className="max-w-6xl mx-auto w-full px-4 py-8">
-        {/* Header with refresh button on the right */}
-        <div className="flex justify-between items-center mb-6">
-          <p className="text-text">Browse and book appointments with top specialists.</p>
           <button 
             onClick={handleRefresh}
-            className="bg-primary text-white rounded-full p-3 shadow-lg hover:bg-accent hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+          className="bg-accent text-white rounded-full w-10 h-10 flex items-center justify-center shadow hover:bg-primary hover:shadow-xl transform hover:scale-105 transition-all duration-200 mb-4 ml-2"
             title="Refresh doctors list"
             disabled={isRefreshing}
           >
@@ -100,55 +102,78 @@ const Doctors = () => {
             </svg>
           </button>
         </div>
-        {/* Specialties Bar */}
-        <div className="flex overflow-x-auto gap-4 pb-4 mb-6 border-b border-primary/10">
-          {specialityData.map((item) => (
-            <button
-              key={item.speciality}
-              onClick={() => navigate(`/doctors/${item.speciality}`)}
-              className={`flex flex-col items-center px-4 py-2 rounded-lg border transition-all min-w-[110px] ${speciality === item.speciality ? 'bg-primary text-surface border-primary shadow' : 'bg-surface text-primary border-primary/30 hover:bg-primary/10'}`}
-            >
-              <img src={item.image} alt={item.speciality} className="w-10 h-10 mb-1" />
-              <span className="text-xs font-semibold">{item.speciality}</span>
-            </button>
-          ))}
-          <button
-            onClick={() => navigate('/doctors')}
-            className={`flex flex-col items-center px-4 py-2 rounded-lg border transition-all min-w-[110px] ${!speciality ? 'bg-primary text-surface border-primary shadow' : 'bg-surface text-primary border-primary/30 hover:bg-primary/10'}`}
-          >
-            <span className="w-10 h-10 mb-1 flex items-center justify-center text-2xl font-bold">&#9733;</span>
-            <span className="text-xs font-semibold">All</span>
-          </button>
+      {/* Sticky Doctors Header */}
+      <div className="sticky top-0 z-30 px-4 py-4 mb-8 rounded-2xl bg-white/90 shadow-lg max-w-2xl mx-auto mt-[-1.5rem] flex items-center justify-center relative animate-fade-in-up">
+        <h1 className="text-2xl md:text-3xl font-bold text-primary tracking-tight mx-auto">Find Your Doctor</h1>
         </div>
-        {/* Search Bar */}
-        <div className="mb-8 flex justify-center">
+      <div className="max-w-6xl mx-auto w-full px-4 py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Specialties List - Left Sidebar on Desktop, collapsible on mobile */}
+          <div className="md:w-1/4 w-full md:sticky md:top-32">
+            {/* Search Bar (now above burger menu) */}
+            <div className="mb-6 flex justify-center md:justify-start">
           <input
             type="text"
             placeholder="Search by name or specialty..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-primary/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-text bg-surface shadow-sm"
+                className="w-full max-w-lg px-5 py-3 border-2 border-primary/20 rounded-full focus:outline-none focus:ring-2 focus:ring-accent text-text bg-white shadow-md text-base"
           />
         </div>
-        {/* Doctors Grid */}
+            <div className="relative flex md:block justify-center mb-8 md:mb-0">
+              <button
+                className="flex items-center gap-2 px-6 py-3 bg-white rounded-full shadow-md border-2 border-primary/10 hover:bg-primary/10 transition text-primary font-semibold w-full md:hidden"
+                onClick={() => setShowSpecialties((v) => !v)}
+                ref={dropdownRef}
+              >
+                <img src={menu_icon} alt="menu" className="w-6 h-6" />
+                <span>{speciality || 'Specialties'}</span>
+                <svg className={`w-4 h-4 ml-1 transition-transform ${!showSpecialties ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+              {/* Specialties List */}
+              {(showSpecialties || window.innerWidth >= 768) && (
+                <div className="w-full md:w-auto bg-white rounded-2xl shadow-lg border-2 border-primary/10 py-2 mt-4 md:mt-0 animate-fade-in-up">
+                  {specialityData.map((item) => (
+                    <button
+                      key={item.speciality}
+                      onClick={() => { setShowSpecialties(window.innerWidth >= 768); navigate(`/doctors/${item.speciality}`); }}
+                      className={`w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-primary/10 transition text-primary font-medium ${speciality === item.speciality ? 'bg-accent/10 text-accent' : ''}`}
+                    >
+                      <img src={item.image} alt={item.speciality} className="w-7 h-7" />
+                      <span>{item.speciality}</span>
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => { setShowSpecialties(window.innerWidth >= 768); navigate('/doctors'); }}
+                    className={`w-full flex items-center gap-3 px-5 py-3 text-left hover:bg-primary/10 transition text-primary font-medium ${!speciality ? 'bg-accent/10 text-accent' : ''}`}
+                  >
+                    <span className="w-7 h-7 flex items-center justify-center text-lg font-bold">&#9733;</span>
+                    <span>All</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Doctors Grid - Right Side */}
+          <div className="md:w-3/4 w-full">
         {filterDoc.length === 0 ? (
           <div className="text-center text-lg text-gray-400 py-20">
             <span>No doctors found for your search.</span>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12 mt-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-5">
             {filterDoc.map((item, idx) => (
               <div
                 key={item._id}
-                className={`relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-200 pt-8 pb-8 px-6 flex flex-col items-center cursor-pointer group hover:-translate-y-1 border border-primary/10 ${animateCards ? 'animate-fade-in-up' : ''}`}
+                    className={`relative bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-200 pt-5 pb-5 px-4 flex flex-col items-center cursor-pointer group hover:-translate-y-1 border border-primary/10 ${animateCards ? 'animate-fade-in-up' : ''}`}
                 style={animateCards ? { animationDelay: `${idx * 60}ms` } : {}}
                 onClick={() => { navigate(`/doctor/${item._id}`); window.scrollTo(0, 0); }}
               >
                 {/* Doctor image with availability badge */}
-                <div className="mb-4 flex flex-col items-center">
+                    <div className="mb-2 flex flex-col items-center">
                   <div className="relative">
                     <img 
-                      className='w-20 h-20 object-cover rounded-full border-4 border-white shadow-md bg-white' 
+                          className='w-16 h-16 object-cover rounded-full border-4 border-white shadow bg-white' 
                       src={getImageUrl(item)} 
                       alt={item.name} 
                       onError={(e) => {
@@ -159,11 +184,11 @@ const Doctors = () => {
                   </div>
                 </div>
                 <div className='w-full flex flex-col items-center'>
-                  <p className='text-lg font-bold text-primary text-center'>{item.name}</p>
-                  <span className='inline-block bg-accent/10 text-accent text-xs font-semibold px-3 py-1 rounded-full my-2'>{item.speciality}</span>
+                      <p className='text-base font-bold text-primary text-center'>{item.name}</p>
+                      <span className='inline-block bg-accent/10 text-accent text-xs font-semibold px-2 py-1 rounded-full my-1'>{item.speciality}</span>
                   <p className='text-text text-xs text-center'>{item.degree} &bull; {item.experience}</p>
                   <p className='text-gray-400 text-xs text-center'>{item.address.line1}</p>
-                  <button className="mt-5 px-5 py-2 bg-accent text-white rounded-full font-semibold shadow hover:bg-primary transition w-full">View Profile</button>
+                      <button className="mt-3 px-4 py-1.5 bg-accent text-white rounded-full font-semibold shadow hover:bg-primary transition w-full text-sm">View Profile</button>
                 </div>
                 {/* Verification Badge */}
                 {getVerificationBadge(item)}
@@ -173,7 +198,9 @@ const Doctors = () => {
         )}
       </div>
     </div>
-  )
-}
+      </div>
+    </div>
+  );
+};
 
-export default Doctors
+export default Doctors;

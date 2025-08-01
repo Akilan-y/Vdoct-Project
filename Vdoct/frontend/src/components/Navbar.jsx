@@ -1,60 +1,65 @@
-import React, { useContext, useState } from 'react'
-import { assets } from '../assets/assets'
-import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom'
-import { AppContext } from '../context/AppContext'
+import React, { useContext } from 'react';
+import { assets } from '../assets/assets';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
 
 const navLinks = [
-  { name: "Home", path: "/" },
-  { name: "Doctors", path: "/doctors" },
-  { name: "About", path: "/about" },
-  { name: "Contact", path: "/contact" },
+  { name: 'Home', path: '/' },
+  { name: 'Doctors', path: '/doctors' },
+  { name: 'About', path: '/about' },
+  { name: 'Contact', path: '/contact' },
 ];
 
 const Navbar = () => {
-
-  const navigate = useNavigate()
-  const location = useLocation()
-
-  const [showMenu, setShowMenu] = useState(false)
-  const { token, setToken, userData } = useContext(AppContext)
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { token, setToken } = useContext(AppContext);
 
   const logout = () => {
-    localStorage.removeItem('token')
-    setToken('')
-    navigate('/')
-  }
+    localStorage.removeItem('token');
+    setToken('');
+    navigate('/');
+  };
 
   return (
-    <header className="backdrop-blur bg-primary/60 shadow-lg shadow-primary/10 sticky top-0 z-20 mt-4 mx-2 rounded-xl border-b border-primary/20">
-      <div className="container mx-auto px-4 py-[11px] flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold text-surface">vdoct</Link>
-        <nav className="space-x-6 text-surface font-medium flex items-center">
+    <header className="bg-white shadow-md rounded-2xl mt-6 mb-4 mx-auto max-w-6xl w-full px-6 py-3 flex items-center justify-between sticky top-4 z-30 animate-fade-in-up">
+      <Link to="/" className="flex items-center gap-2">
+        <span className="text-2xl font-bold text-primary tracking-tight">vdoct</span>
+      </Link>
+      <nav className="flex-1 flex justify-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               to={link.path}
-              className={`hover:text-blush transition ${location.pathname === link.path ? "text-blush font-semibold" : ""}`}
+            className={`text-base font-medium px-3 py-1 rounded-full transition-colors duration-200 ${location.pathname === link.path ? 'bg-accent text-white' : 'text-primary hover:bg-primary/10'}`}
             >
               {link.name}
             </Link>
           ))}
+          {token && (
+            <Link
+              to="/meet"
+            className={`text-base font-medium px-3 py-1 rounded-full transition-colors duration-200 flex items-center gap-1 ${location.pathname === '/meet' ? 'bg-accent text-white' : 'text-primary hover:bg-primary/10'}`}
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+              </svg>
+              Meet
+            </Link>
+          )}
+      </nav>
+      <div className="flex items-center gap-2">
           {token ? (
             <>
               <Link
-                to="/my-appointments"
-                className="ml-4 px-4 py-2 bg-accent text-white rounded hover:bg-primary transition shadow"
-              >
-                My Appointments
-              </Link>
-              <Link
                 to="/my-profile"
-                className="ml-2 px-4 py-2 bg-primary text-white rounded hover:bg-accent transition shadow"
+              className="px-5 py-2 bg-primary text-white rounded-full font-semibold shadow hover:bg-accent transition"
               >
                 Profile
               </Link>
               <button
                 onClick={logout}
-                className="ml-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition shadow"
+              className="px-5 py-2 bg-blush text-white rounded-full font-semibold shadow hover:bg-red-600 transition"
               >
                 Logout
               </button>
@@ -62,15 +67,14 @@ const Navbar = () => {
           ) : (
             <Link
               to="/login"
-              className="ml-4 px-4 py-2 bg-blush text-white rounded hover:bg-accent transition shadow"
+            className="px-5 py-2 bg-accent text-white rounded-full font-semibold shadow hover:bg-primary transition"
             >
               Login
             </Link>
           )}
-        </nav>
       </div>
     </header>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

@@ -60,25 +60,76 @@ const Login = () => {
   }, [doctorToken, navigate])
 
   return (
-    <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center'>
-      <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-[#515151] text-sm shadow-lg'>
-        <p className='text-2xl font-semibold'>{state}</p>
-        <p>Please {state === 'Admin Login' ? 'login as admin' : 'login as doctor'}</p>
-        <div className='w-full '>
-          <p>Email</p>
-          <input onChange={(e) => setEmail(e.target.value)} value={email} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="email" required />
+    <div className='min-h-screen flex items-center justify-center p-4'>
+      <div className='bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md'>
+        {/* Header */}
+        <div className='text-center mb-8'>
+          <div className='w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-lg mx-auto mb-4'>
+            👨‍⚕️
+          </div>
+          <h1 className='text-3xl font-bold text-gray-900 mb-2'>{state}</h1>
+          <p className='text-gray-600'>Welcome to vdoct healthcare management</p>
         </div>
-        <div className='w-full '>
-          <p>Password</p>
-          <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
+
+        {/* Form */}
+        <form onSubmit={onSubmitHandler} className='space-y-6'>
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Email Address</label>
+            <input 
+              onChange={(e) => setEmail(e.target.value)} 
+              value={email} 
+              className='w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200' 
+              type="email" 
+              placeholder="Enter your email"
+              required 
+            />
+          </div>
+          
+          <div>
+            <label className='block text-sm font-medium text-gray-700 mb-2'>Password</label>
+            <input 
+              onChange={(e) => setPassword(e.target.value)} 
+              value={password} 
+              className='w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200' 
+              type="password" 
+              placeholder="Enter your password"
+              required 
+            />
+          </div>
+          
+          <button 
+            className='w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
+          >
+            {state}
+          </button>
+        </form>
+
+        {/* Toggle */}
+        <div className='mt-6 text-center'>
+          {state === 'Admin Login' ? (
+            <p className='text-gray-600'>
+              Login as Doctor? 
+              <span 
+                onClick={() => setState('Doctor Login')} 
+                className='text-blue-600 hover:text-blue-700 underline cursor-pointer ml-1 font-medium'
+              >
+                Click here
+              </span>
+            </p>
+          ) : (
+            <p className='text-gray-600'>
+              Login as Admin? 
+              <span 
+                onClick={() => setState('Admin Login')} 
+                className='text-blue-600 hover:text-blue-700 underline cursor-pointer ml-1 font-medium'
+              >
+                Click here
+              </span>
+            </p>
+          )}
         </div>
-        <button className='bg-primary text-white w-full py-2 my-2 rounded-md text-base'>{state}</button>
-        {state === 'Admin Login'
-          ? <p>Login as Doctor? <span onClick={() => setState('Doctor Login')} className='text-primary underline cursor-pointer'>Click here</span></p>
-          : <p>Login as Admin? <span onClick={() => setState('Admin Login')} className='text-primary underline cursor-pointer'>Click here</span></p>
-        }
       </div>
-    </form>
+    </div>
   )
 }
 

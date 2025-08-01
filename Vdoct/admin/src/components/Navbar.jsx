@@ -20,12 +20,28 @@ const Navbar = () => {
   }
 
   return (
-    <div className='flex justify-between items-center px-4 sm:px-10 py-3 border-b bg-white'>
-      <div className='flex items-center gap-2 text-xs'>
-        <img onClick={() => navigate('/')} className='w-36 sm:w-40 cursor-pointer' src={assets.admin_logo} alt="" />
-        <p className='border px-2.5 py-0.5 rounded-full border-gray-500 text-gray-600'>{adminToken ? 'Admin' : 'Doctor'}</p>
+    <div className='bg-white shadow-lg rounded-2xl mx-6 mt-6 mb-4 px-6 py-4 flex justify-between items-center'>
+      <div className='flex items-center gap-4'>
+        <div 
+          onClick={() => navigate('/')} 
+          className='flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity'
+        >
+          <span className='text-2xl font-bold text-blue-600 tracking-tight'>vdoct</span>
+        </div>
+        <div className='flex items-center gap-2'>
+          <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+          <span className='text-sm font-medium text-gray-600 px-3 py-1 bg-gray-100 rounded-full'>
+            {adminToken ? 'Admin Panel' : 'Doctor Panel'}
+          </span>
+        </div>
       </div>
-      <button onClick={() => logout()} className='bg-primary text-white text-sm px-10 py-2 rounded-full'>Logout</button>
+      
+      <button 
+        onClick={logout} 
+        className='bg-red-500 hover:bg-red-600 text-white text-sm font-medium px-6 py-2.5 rounded-full transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5'
+      >
+        Logout
+      </button>
     </div>
   )
 }

@@ -4,18 +4,6 @@ import validator from "validator";
 import userModel from "../models/userModel.js";
 import doctorModel from "../models/doctorModel.js";
 import appointmentModel from "../models/appointmentModel.js";
-import Razorpay from "razorpay";
-import Stripe from "stripe";
-import crypto from "crypto";
-
-// Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_placeholder",
-    key_secret: process.env.RAZORPAY_KEY_SECRET || "placeholder_secret"
-});
-
-// Initialize Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_placeholder");
 
 // API to register user
 const registerUser = async (req, res) => {
@@ -181,9 +169,14 @@ const bookAppointment = async (req, res) => {
             date: Date.now()
         }
         const newAppointment = new appointmentModel(appointmentData)
-        await newAppointment.save()
+        const savedAppointment = await newAppointment.save()
         await doctorModel.findByIdAndUpdate(docId, { slots_booked })
-        res.json({ success: true, message: 'Appointment Booked' })
+        res.json({ 
+            success: true, 
+            message: 'Appointment Booked',
+            appointmentId: savedAppointment._id,
+            patientName: userData.name
+        })
     } catch (error) {
         console.log(error)
         res.json({ success: false, message: error.message })
@@ -220,126 +213,6 @@ const listAppointment = async (req, res) => {
     }
 }
 
-// API to create Razorpay order
-const paymentRazorpay = async (req, res) => {
-    try {
-        const { appointmentId } = req.body;
-        const userId = req.user.id;
-        
-        const appointment = await appointmentModel.findById(appointmentId);
-        if (!appointment) {
-            return res.json({ success: false, message: "Appointment not found" });
-        }
-        
-        if (appointment.userId && appointment.userId.toString() !== userId) {
-            return res.json({ success: false, message: "Unauthorized" });
-        }
-        
-        const options = {
-            amount: appointment.amount * 100, // Razorpay expects amount in paise
-            currency: "INR",
-            receipt: `appointment_${appointmentId}`,
-        };
-        
-        const order = await razorpay.orders.create(options);
-        res.json({ success: true, order });
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
-    }
-};
-
-// API to verify Razorpay payment
-const verifyRazorpay = async (req, res) => {
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-        const userId = req.user.id;
-        
-        // Verify the payment signature
-        const body = razorpay_order_id + "|" + razorpay_payment_id;
-        const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET || "placeholder_secret")
-            .update(body.toString())
-            .digest("hex");
-        
-        if (expectedSignature === razorpay_signature) {
-            // Payment is successful, update appointment
-            await appointmentModel.findByIdAndUpdate(
-                { _id: req.body.appointmentId },
-                { payment: true }
-            );
-            res.json({ success: true, message: "Payment successful" });
-        } else {
-            res.json({ success: false, message: "Payment verification failed" });
-        }
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
-    }
-};
-
-// API to create Stripe payment session
-const paymentStripe = async (req, res) => {
-    try {
-        const { appointmentId } = req.body;
-        const userId = req.user.id;
-        
-        const appointment = await appointmentModel.findById(appointmentId);
-        if (!appointment) {
-            return res.json({ success: false, message: "Appointment not found" });
-        }
-        
-        if (appointment.userId && appointment.userId.toString() !== userId) {
-            return res.json({ success: false, message: "Unauthorized" });
-        }
-        
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items: [
-                {
-                    price_data: {
-                        currency: "inr",
-                        product_data: {
-                            name: `Appointment with ${appointment.docData.name}`,
-                        },
-                        unit_amount: appointment.amount * 100, // Stripe expects amount in cents
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: "payment",
-            success_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/verify?success=true&appointmentId=${appointmentId}`,
-            cancel_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/my-appointments`,
-        });
-        
-        res.json({ success: true, session_url: session.url });
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
-    }
-};
-
-// API to verify Stripe payment
-const verifyStripe = async (req, res) => {
-    try {
-        const { success, appointmentId } = req.body;
-        const userId = req.user.id;
-        
-        if (success === "true") {
-            await appointmentModel.findByIdAndUpdate(
-                { _id: appointmentId },
-                { payment: true }
-            );
-            res.json({ success: true, message: "Payment successful" });
-        } else {
-            res.json({ success: false, message: "Payment failed" });
-        }
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
-    }
-};
-
 export {
     loginUser,
     registerUser,
@@ -347,9 +220,5 @@ export {
     updateProfile,
     bookAppointment,
     listAppointment,
-    cancelAppointment,
-    paymentRazorpay,
-    verifyRazorpay,
-    paymentStripe,
-    verifyStripe
+    cancelAppointment
 }

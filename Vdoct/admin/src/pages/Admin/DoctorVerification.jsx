@@ -116,7 +116,11 @@ const DoctorVerification = () => {
                         <div key={doctor._id} className='border rounded-lg p-4 bg-white shadow-sm'>
                             <div className='flex items-center gap-3 mb-3'>
                                 <img 
-                                    src={doctor.image ? `${backendUrl}/uploads/${doctor.image}` : assets.doctor_icon} 
+                                    src={doctor.image 
+                                        ? (doctor.image.startsWith('http') 
+                                            ? doctor.image 
+                                            : `${backendUrl}/uploads/${doctor.image}`)
+                                        : assets.doctor_icon} 
                                     alt={doctor.name} 
                                     className='w-16 h-16 rounded-full object-cover'
                                 />

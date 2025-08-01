@@ -15,6 +15,43 @@ const DoctorContextProvider = (props) => {
     const [dashData, setDashData] = useState(null)
     const [profileData, setProfileData] = useState(null)
 
+    // Debug token on mount
+    useEffect(() => {
+        const storedToken = localStorage.getItem('doctorToken');
+        console.log('DoctorContext: Stored token exists:', !!storedToken);
+        console.log('DoctorContext: Stored token length:', storedToken ? storedToken.length : 0);
+        console.log('DoctorContext: Stored token preview:', storedToken ? storedToken.substring(0, 20) + '...' : 'null');
+        console.log('DoctorContext: State token exists:', !!doctorToken);
+        console.log('DoctorContext: State token length:', doctorToken ? doctorToken.length : 0);
+        
+        // Validate token if it exists
+        if (storedToken) {
+            validateToken(storedToken);
+        }
+    }, [doctorToken]);
+
+    // Function to validate token
+    const validateToken = async (token) => {
+        try {
+            console.log('Validating doctor token...');
+            const { data } = await axios.get(backendUrl + '/api/doctor/profile', { 
+                headers: { dtoken: token } 
+            });
+            console.log('Token validation successful:', data.success);
+        } catch (error) {
+            console.log('Token validation failed:', error.response?.data?.message || error.message);
+            if (error.response?.data?.message === 'Not Authorized Login Again' || 
+                error.response?.data?.message === 'Token expired' ||
+                error.response?.data?.message === 'Invalid token format') {
+                console.log('Removing invalid token...');
+                setDoctorToken('');
+                localStorage.removeItem('doctorToken');
+                toast.error('Session expired. Please login again.');
+                navigate('/');
+            }
+        }
+    };
+
     // Axios interceptor for handling unauthorized errors globally
     useEffect(() => {
         const interceptor = axios.interceptors.response.use(

@@ -10,9 +10,14 @@ const loginDoctor = async (req, res) => {
     try {
 
         const { email, password } = req.body
+        console.log('Doctor login attempt for email:', email);
+        console.log('JWT_SECRET exists:', !!process.env.JWT_SECRET);
+        console.log('JWT_SECRET length:', process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0);
+        
         const user = await doctorModel.findOne({ email })
 
         if (!user) {
+            console.log('Doctor not found for email:', email);
             return res.json({ success: false, message: "Invalid credentials" })
         }
 
@@ -20,15 +25,27 @@ const loginDoctor = async (req, res) => {
 
         if (isMatch) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-            console.log('Generated token for doctor login:', token, 'for user id:', user._id);
+            console.log('Generated token for doctor login:', token.substring(0, 20) + '...');
+            console.log('For user id:', user._id);
+            console.log('Using JWT_SECRET length:', process.env.JWT_SECRET.length);
+            
+            // Test token verification immediately
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                console.log('Token verification test successful:', decoded);
+            } catch (verifyError) {
+                console.error('Token verification test failed:', verifyError);
+            }
+            
             res.json({ success: true, token })
         } else {
+            console.log('Password mismatch for doctor:', email);
             res.json({ success: false, message: "Invalid credentials" })
         }
 
 
     } catch (error) {
-        console.log(error)
+        console.log('Doctor login error:', error)
         res.json({ success: false, message: error.message })
     }
 }
@@ -156,10 +173,29 @@ const updateDoctorProfile = async (req, res) => {
             return res.json({ success: false, message: 'Authentication error - user not found' });
         }
 
-        const { fees, address, available, about } = req.body;
+        const { fees, address, available, about, upiId, licenseNumber, registrationNumber, notes } = req.body;
         const docId = req.user.id;
 
-        await doctorModel.findByIdAndUpdate(docId, { fees, address, available, about });
+        console.log('=== DOCTOR PROFILE UPDATE ===');
+        console.log('Request body:', req.body);
+        console.log('Extracted UPI ID:', upiId);
+
+        const updateData = {
+            fees,
+            address,
+            available,
+            about,
+            ...(upiId !== undefined && { upiId }),
+            ...(licenseNumber !== undefined && { licenseNumber }),
+            ...(registrationNumber !== undefined && { registrationNumber }),
+            ...(notes !== undefined && { notes })
+        };
+
+        console.log('Final update data:', updateData);
+
+        await doctorModel.findByIdAndUpdate(docId, updateData);
+
+        console.log('Profile updated successfully for doctor ID:', docId);
 
         res.json({ success: true, message: 'Profile Updated' });
 
